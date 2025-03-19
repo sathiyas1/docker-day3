@@ -1,40 +1,34 @@
+
 pipeline {
     agent any
-
-    environment {
-        DOCKER_CREDENTIALS = credentials('maven')  // Docker Hub Credentials ID
-    }
-
+    tools {maven "maven"}
     stages {
         stage('SCM') {
             steps {
                 git branch: 'main', url: 'https://github.com/sathiyas1/guvi-day1.git'
             }
         }
-
         stage('Build') {
             steps {
-                sh "mvn clean"
-                sh "mvn install"
+                sh 'mvn clean package'
             }
         }
-
-        stage('Build Docker Image') {
+        stage('build to images') {
             steps {
                 script {
-                    sh 'docker build -t sathiyaseelan12/guvi-day1.git .'
+                    sh 'docker build -t sathiyaseelan12/webapp1 .'
                 }
             }
         }
-
-        stage('Push to Docker Hub') {
+        stage('push to hub') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'maven') {
-                        sh 'docker push sathiyaseelan12/guvi-day1.git'
+                    withDockerRegistry(credentialsId: 'docker_cred', toolName: 'docker', url: 'https://index.docker.io/v1/') {
+                              sh 'docker push sathiyaseelan12/webapp1'
                     }
                 }
             }
         }
+        
     }
 }
